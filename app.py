@@ -673,6 +673,7 @@ HTML_TEMPLATE = """
                     <div class="text-center md:text-left">
                         <h1 class="text-xl md:text-2xl font-bold">YouTube Downloader Pro</h1>
                         <p class="text-red-100 text-sm">Web Version {{ version }}</p>
+                        <p class="text-red-200 text-xs mt-1">Created by Purn Vadodariya</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-center space-x-6 text-sm w-full md:w-auto">
