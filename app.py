@@ -247,7 +247,7 @@ class YouTubeDownloadManager:
                     "status": "processing"
                 })
 
-    def download_video(self, download_id: str, url: str, quality: str, container: str) -> bool:
+    def download_video(self, download_id: str, url: str, quality: str, container: str, save_path: str = "") -> bool:
         """Download video with specific quality and format"""
         try:
             # Update download status
@@ -265,7 +265,7 @@ class YouTubeDownloadManager:
                 return False
 
             title = self.clean_filename(info.get("title", "video"))
-            out_dir = self.root / "Videos" / "Singles"
+            out_dir = Path(save_path) if save_path else self.root / "Videos" / "Singles"
             out_dir.mkdir(exist_ok=True, parents=True)
             outtmpl = str(out_dir / f"{title}.%(ext)s")
 
@@ -346,7 +346,7 @@ class YouTubeDownloadManager:
             })
             return False
 
-    def download_audio(self, download_id: str, url: str, audio_format: str, bitrate: str = "192") -> bool:
+    def download_audio(self, download_id: str, url: str, audio_format: str, bitrate: str = "192", save_path: str = "") -> bool:
         """Download audio with optional metadata embedding"""
         try:
             # Update download status
@@ -364,7 +364,7 @@ class YouTubeDownloadManager:
                 return False
 
             title = self.clean_filename(info.get("title", "audio"))
-            out_dir = self.root / "Music" / "Singles"
+            out_dir = Path(save_path) if save_path else self.root / "Music" / "Singles"
             out_dir.mkdir(exist_ok=True, parents=True)
             outtmpl = str(out_dir / f"{title}.%(ext)s")
 
@@ -465,7 +465,7 @@ class YouTubeDownloadManager:
             })
             return False
 
-    def start_download(self, url: str, media_type: str, quality: str, format_type: str, bitrate: str = "192") -> str:
+    def start_download(self, url: str, media_type: str, quality: str, format_type: str, bitrate: str = "192", save_path: str = "") -> str:
         """Start a new download"""
         download_id = str(uuid.uuid4())
         
@@ -483,9 +483,9 @@ class YouTubeDownloadManager:
         
         # Submit download to thread pool
         if media_type == "video":
-            self.executor.submit(self.download_video, download_id, url, quality, format_type)
+            self.executor.submit(self.download_video, download_id, url, quality, format_type, save_path)
         else:
-            self.executor.submit(self.download_audio, download_id, url, format_type, bitrate)
+            self.executor.submit(self.download_audio, download_id, url, format_type, bitrate, save_path)
         
         return download_id
 
@@ -573,6 +573,7 @@ def start_download():
     quality = data.get('quality', '720p')
     format_type = data.get('format', 'mp4')
     bitrate = data.get('bitrate', '192')
+    save_path = data.get('save_path', '').strip()
     
     if not url or not media_type:
         return jsonify({'error': 'URL and type are required'}), 400
@@ -582,7 +583,7 @@ def start_download():
         return jsonify({'error': 'Invalid media type'}), 400
     
     # Start download
-    download_id = download_manager.start_download(url, media_type, quality, format_type, bitrate)
+    download_id = download_manager.start_download(url, media_type, quality, format_type, bitrate, save_path)
     
     return jsonify({
         'download_id': download_id,
@@ -787,6 +788,14 @@ HTML_TEMPLATE = """
                         </div>
                     </div>
 
+                    <!-- Save Path Options -->
+                    <div id="saveOptions" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 mt-4 md:mt-0">Custom Save Folder Path (Optional)</label>
+                        <input type="text" id="savePath" placeholder="Leave empty for default directory" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                        <p class="text-xs text-gray-500 mt-1">E.g. /home/markush/Downloads</p>
+                    </div>
+
                     <!-- Download Button -->
                     <button onclick="startDownload()" id="downloadBtn" disabled
                             class="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition">
@@ -924,6 +933,7 @@ HTML_TEMPLATE = """
                 document.getElementById('audioFormat').value;
             const bitrate = selectedMediaType === 'audio' ? 
                 document.getElementById('audioBitrate').value : '192';
+            const savePath = document.getElementById('savePath').value.trim();
 
             const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.textContent = 'Starting Download...';
@@ -935,7 +945,8 @@ HTML_TEMPLATE = """
                     type: selectedMediaType,
                     quality: quality,
                     format: format,
-                    bitrate: bitrate
+                    bitrate: bitrate,
+                    save_path: savePath
                 });
 
                 const downloadId = response.data.download_id;
