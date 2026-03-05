@@ -648,6 +648,11 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube All-in-One Downloader Pro - Web Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
         .download-progress {
@@ -662,9 +667,9 @@ HTML_TEMPLATE = """
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300 min-h-screen">
     <!-- Header -->
-    <header class="bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg">
+    <header class="bg-gradient-to-r from-red-600 to-red-700 dark:from-gray-800 dark:to-gray-900 text-white shadow-lg border-b border-red-800 dark:border-gray-700">
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
                 <div class="flex items-center space-x-4">
@@ -678,6 +683,11 @@ HTML_TEMPLATE = """
                     </div>
                 </div>
                 <div class="flex items-center justify-center space-x-6 text-sm w-full md:w-auto">
+                    <button onclick="toggleDarkMode()" class="text-white hover:text-red-200 dark:hover:text-gray-300 p-2 rounded-full focus:outline-none">
+                        <svg id="darkModeIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
                     <div class="text-center">
                         <div class="font-bold text-lg">{{ stats.total_downloads }}</div>
                         <div class="text-red-100">Downloads</div>
@@ -696,29 +706,29 @@ HTML_TEMPLATE = """
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             <!-- Download Form -->
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold mb-6 text-gray-800">Download Media</h2>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-gray-100">Download Media</h2>
                     
                     <!-- URL Input -->
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Video/Audio URL</label>
-                        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Video/Audio URL(s) - One per line</label>
+                        <textarea id="videoUrl" rows="3" placeholder="https://www.youtube.com/watch?v=...\nBatch downloading supported! Paste multiple URLs here." 
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
                     </div>
 
                     <!-- Media Type Selection -->
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Media Type</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Media Type</label>
                         <div class="grid grid-cols-2 gap-4">
                             <button onclick="selectMediaType('video')" id="videoBtn" 
-                                    class="media-type-btn px-4 py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition">
+                                    class="media-type-btn px-4 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-gray-700 rounded-lg hover:bg-red-50 dark:hover:bg-gray-600 transition">
                                 <svg class="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
                                 </svg>
                                 Video
                             </button>
                             <button onclick="selectMediaType('audio')" id="audioBtn"
-                                    class="media-type-btn px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                                    class="media-type-btn px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                 <svg class="w-6 h-6 mx-auto mb-1" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                                 </svg>
@@ -731,8 +741,8 @@ HTML_TEMPLATE = """
                     <div id="videoOptions" class="mb-6 hidden">
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Quality</label>
-                                <select id="videoQuality" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quality</label>
+                                <select id="videoQuality" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500">
                                     <option value="best">Best Available</option>
                                     <option value="4k">4K (2160p)</option>
                                     <option value="1440p">1440p</option>
@@ -744,8 +754,8 @@ HTML_TEMPLATE = """
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2 mt-4 md:mt-0">Format</label>
-                                <select id="videoFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-4 md:mt-0">Format</label>
+                                <select id="videoFormat" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500">
                                     <option value="mp4" selected>MP4</option>
                                     <option value="mkv">MKV</option>
                                     <option value="webm">WebM</option>
@@ -759,8 +769,8 @@ HTML_TEMPLATE = """
                     <div id="audioOptions" class="mb-6 hidden">
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
-                                <select id="audioFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
+                                <select id="audioFormat" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500">
                                     <option value="mp3" selected>MP3</option>
                                     <option value="m4a">M4A</option>
                                     <option value="flac">FLAC</option>
@@ -769,8 +779,8 @@ HTML_TEMPLATE = """
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2 mt-4 md:mt-0">Bitrate</label>
-                                <select id="audioBitrate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-4 md:mt-0">Bitrate</label>
+                                <select id="audioBitrate" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500">
                                     <option value="320">320 kbps</option>
                                     <option value="256">256 kbps</option>
                                     <option value="192" selected>192 kbps</option>
@@ -782,18 +792,18 @@ HTML_TEMPLATE = """
 
                     <!-- Video Info Display -->
                     <div id="videoInfo" class="mb-6 hidden">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2">Video Information</h3>
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-gray-800 dark:text-gray-200">
+                            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Video Information (Preview)</h3>
                             <div id="videoInfoContent"></div>
                         </div>
                     </div>
 
                     <!-- Save Path Options -->
                     <div id="saveOptions" class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2 mt-4 md:mt-0">Custom Save Folder Path (Optional)</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-4 md:mt-0">Custom Save Folder Path (Optional)</label>
                         <input type="text" id="savePath" placeholder="Leave empty for default directory" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
-                        <p class="text-xs text-gray-500 mt-1">E.g. /home/markush/Downloads</p>
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">E.g. /home/markush/Downloads</p>
                     </div>
 
                     <!-- Download Button -->
@@ -804,10 +814,10 @@ HTML_TEMPLATE = """
                 </div>
 
                 <!-- Active Downloads -->
-                <div class="bg-white rounded-lg shadow-md p-6 mt-8">
-                    <h2 class="text-xl font-bold mb-6 text-gray-800">Active Downloads</h2>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-8">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-gray-100">Active Downloads</h2>
                     <div id="activeDownloads" class="space-y-4">
-                        <p class="text-gray-500 text-center py-8">No active downloads</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-8">No active downloads</p>
                     </div>
                 </div>
             </div>
@@ -815,9 +825,9 @@ HTML_TEMPLATE = """
             <!-- Sidebar -->
             <div class="lg:col-span-1">
                 <!-- Statistics -->
-                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 class="text-xl font-bold mb-4 text-gray-800">Statistics</h2>
-                    <div class="space-y-3">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">Statistics</h2>
+                    <div class="space-y-3 dark:text-gray-300">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Video Downloads:</span>
                             <span class="font-semibold">{{ stats.video_downloads }}</span>
@@ -834,10 +844,10 @@ HTML_TEMPLATE = """
                 </div>
 
                 <!-- Recent Downloads -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold mb-4 text-gray-800">Recent Downloads</h2>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">Recent Downloads</h2>
                     <div id="recentDownloads" class="space-y-3">
-                        <p class="text-gray-500 text-center py-4">No recent downloads</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No recent downloads</p>
                     </div>
                 </div>
             </div>
@@ -854,7 +864,29 @@ HTML_TEMPLATE = """
             selectMediaType('video');
             loadDownloadHistory();
             setInterval(updateActiveDownloads, 2000);
+            
+            // Rehydrate dark mode state
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                updateDarkModeIcon(true);
+            }
         });
+        
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateDarkModeIcon(isDark);
+        }
+        
+        function updateDarkModeIcon(isDark) {
+            const icon = document.getElementById('darkModeIcon');
+            if (isDark) {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+            } else {
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+            }
+        }
 
         function selectMediaType(type) {
             selectedMediaType = type;
@@ -875,18 +907,34 @@ HTML_TEMPLATE = """
         }
 
         async function getVideoInfo() {
-            const url = document.getElementById('videoUrl').value.trim();
-            if (!url) {
-                alert('Please enter a video URL');
+            const urlInput = document.getElementById('videoUrl').value.trim();
+            const urls = urlInput.split('\n').map(u => u.trim()).filter(u => u);
+            
+            if (urls.length === 0) {
+                alert('Please enter at least one URL');
                 return;
             }
 
             const downloadBtn = document.getElementById('downloadBtn');
+            if(urls.length > 1) {
+                downloadBtn.textContent = 'Start Batch Download';
+                downloadBtn.disabled = false;
+                videoInfoData = {title: `Batch Mode: ${urls.length} items queued`};
+                displayVideoInfo({
+                    title: `Batch Downloads Detected`,
+                    uploader: `Multiple Items (${urls.length})`,
+                    duration: `N/A`,
+                    views: 0,
+                    description: `You have queued ${urls.length} media links. Press Start downloading to kick off processing.`
+                });
+                return;
+            }
+
             downloadBtn.textContent = 'Fetching Info...';
             downloadBtn.disabled = true;
 
             try {
-                const response = await axios.get('/api/info?url=' + encodeURIComponent(url));
+                const response = await axios.get('/api/info?url=' + encodeURIComponent(urls[0]));
                 videoInfoData = response.data;
                 
                 displayVideoInfo(videoInfoData);
@@ -921,10 +969,12 @@ HTML_TEMPLATE = """
         async function startDownload() {
             if (!videoInfoData) {
                 await getVideoInfo();
-                return;
+                if(!videoInfoData) return;
             }
 
-            const url = document.getElementById('videoUrl').value.trim();
+            const urls = document.getElementById('videoUrl').value.trim().split('\\n').map(u => u.trim()).filter(u => u);
+            if(urls.length === 0) return;
+
             const quality = selectedMediaType === 'video' ? 
                 document.getElementById('videoQuality').value : 
                 document.getElementById('audioBitrate').value;
@@ -936,43 +986,42 @@ HTML_TEMPLATE = """
             const savePath = document.getElementById('savePath').value.trim();
 
             const downloadBtn = document.getElementById('downloadBtn');
-            downloadBtn.textContent = 'Starting Download...';
+            downloadBtn.textContent = urls.length > 1 ? 'Starting Batch Downloads...' : 'Starting Download...';
             downloadBtn.disabled = true;
 
-            try {
-                const response = await axios.post('/api/download', {
-                    url: url,
-                    type: selectedMediaType,
-                    quality: quality,
-                    format: format,
-                    bitrate: bitrate,
-                    save_path: savePath
-                });
+            // Submit requests asynchronously over the network
+            for (const url of urls) {
+                try {
+                    const response = await axios.post('/api/download', {
+                        url: url,
+                        type: selectedMediaType,
+                        quality: quality,
+                        format: format,
+                        bitrate: bitrate,
+                        save_path: savePath
+                    });
 
-                const downloadId = response.data.download_id;
-                currentDownloads[downloadId] = {
-                    id: downloadId,
-                    url: url,
-                    type: selectedMediaType,
-                    title: videoInfoData.title,
-                    status: 'queued'
-                };
-
-                // Reset form
-                document.getElementById('videoUrl').value = '';
-                document.getElementById('videoInfo').classList.add('hidden');
-                videoInfoData = null;
-                downloadBtn.textContent = 'Get Video Info First';
-                
-                // Start monitoring
-                updateActiveDownloads();
-                
-            } catch (error) {
-                console.error('Error starting download:', error);
-                alert('Failed to start download. Please try again.');
-                downloadBtn.textContent = 'Start Download';
-                downloadBtn.disabled = false;
+                    const downloadId = response.data.download_id;
+                    currentDownloads[downloadId] = {
+                        id: downloadId,
+                        url: url,
+                        type: selectedMediaType,
+                        title: urls.length > 1 ? `Batch Item Processing...` : videoInfoData.title,
+                        status: 'queued'
+                    };
+                } catch (error) {
+                    console.error('Download failed for', url, error);
+                }
             }
+
+            // Reset form completely
+            document.getElementById('videoUrl').value = '';
+            videoInfoData = null;
+            document.getElementById('videoInfo').classList.add('hidden');
+            downloadBtn.textContent = 'Get Video Info First';
+            downloadBtn.disabled = true;
+            
+            updateActiveDownloads();
         }
 
         async function updateActiveDownloads() {
