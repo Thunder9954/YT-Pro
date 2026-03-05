@@ -1,0 +1,7 @@
+Flask
+Flask-Session
+yt-dlp
+mutagen
+Requests
+colorama
+gunicorn
